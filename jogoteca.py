@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session, flash,url_for
 
 app = Flask(__name__)
 app.secret_key = 'koala'
+
 
 class Game:
     def __init__(self, name, category, console):
@@ -9,6 +10,21 @@ class Game:
         self.category = category
         self.console = console
 
+
+class User:
+    def __init__(self, id, name, password):
+        self.id = id
+        self.name = name
+        self.password = password
+
+
+user1 = User('david', 'David Almeida', '2742')
+user2 = User('fulano', 'Fulano da Silva', 'xablau')
+user3 = User('cicrano', 'Cicrano barusks', 'buia')
+
+users = {user1.id: user1,
+         user2.id: user2,
+         user3.id: user3}
 
 game1 = Game('Super Mario', 'Ação', 'Super nintendo')
 game2 = Game('Pokemon Gold', 'RPG', 'Game Boy')
@@ -24,7 +40,7 @@ def index():
 @app.route('/new')
 def new():
     if 'logged_user' not in session or session['logged_user'] == None:
-        return redirect('/login?next=new')
+        return redirect(url_for('login', next=url_for('new')))
     return render_template('new.html', title='Novo Jogo')
 
 
@@ -35,31 +51,35 @@ def create():
     console = request.form['console']
     game = Game(name, category, console)
     list.append(game)
-    return redirect('/')
+    return redirect(url_for('index'))
 
 
 @app.route('/login')
 def login():
     next = request.args.get('next')
-    return render_template('login.html',)
+    return render_template('login.html', next=next)
 
 
-@app.route('/auth', methods=['POST'])
+@app.route('/auth', methods=['POST',])
 def auth():
-    if 'mestra' == request.form['password']:
-        session['logged_user'] = request.form['user']
-        flash(request.form['user'] + ' Logou com sucesso!')
-        return redirect('/')
+
+    if request.form['user'] in users:
+        user = users[request.form['user']]
+        if user.password == request.form['password']:
+            session['logged_user'] = user.id
+            flash(user.name + ' Logou com sucesso!')
+            next_page = request.form['next']
+            return redirect(next_page)
     else:
         flash('Usuario ou senha invalido tente novamente')
-        return redirect('/login')
+        return redirect(url_for('login'))
 
 
 @app.route('/logout')
 def logout():
     session['logged_user'] = None
     flash('Nenhum usuario logado!')
-    return redirect('/')
+    return redirect(url_for('index'))
 
 
 app.run(debug=True)
