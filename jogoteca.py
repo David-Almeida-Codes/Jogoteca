@@ -23,6 +23,8 @@ def index():
 
 @app.route('/new')
 def new():
+    if 'logged_user' not in session or session['logged_user'] == None:
+        return redirect('/login?next=new')
     return render_template('new.html', title='Novo Jogo')
 
 
@@ -38,7 +40,8 @@ def create():
 
 @app.route('/login')
 def login():
-    return render_template('login.html')
+    next = request.args.get('next')
+    return render_template('login.html',)
 
 
 @app.route('/auth', methods=['POST'])
